@@ -1,20 +1,27 @@
-// Small on-device LLM (Qwen2.5-Instruct ONNX). Three jobs, all offline:
+// Small on-device LLM (Qwen3-4B via WebLLM; ONNX fallback). Three jobs, all offline:
 //  - fill: complete fields the rule parser left empty (numbers it already found are never touched)
 //  - translate: one English line for coalition partners
 //  - sop: answer a procedure question only from the retrieved synthetic SOP passages, with [SOP-xx] citations
 import { pipeline } from "@huggingface/transformers";
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
+import { CreateMLCEngine, prebuiltAppConfig } from "@mlc-ai/web-llm";
 import { setupEnv, pickDevice, progressReporter } from "./common.js";
 
 let gen = null;
 let mlc = null;
+let currentModel = "";
 const post = (m) => self.postMessage(m);
 
 async function load({ base, model, prefer, dtype: forced }) {
   const t0 = performance.now();
+  currentModel = model;
   // WebLLM (MLC) models run their own WebGPU kernels; far more reliable than ORT-WebGPU for chat models.
   if (/-MLC$/.test(model)) {
+    // Models newer than the WebLLM prebuilt list: weights from mlc-ai on Hugging Face, kernels from binary-mlc-llm-libs.
+    const extra = /Qwen3-4B-Instruct-2507/.test(model) && !prebuiltAppConfig.model_list.some((m) => m.model_id === model)
+      ? [{ model_id: model, model: `https://huggingface.co/mlc-ai/${model}`, model_lib: `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/${model.replace("-MLC", "")}-ctx4k_cs1k-webgpu.wasm`, overrides: { context_window_size: 4096 } }]
+      : [];
     mlc = await CreateMLCEngine(model, {
+      appConfig: { ...prebuiltAppConfig, model_list: [...prebuiltAppConfig.model_list, ...extra] },
       initProgressCallback: (p) => post({ type: "progress", label: "llm", loaded: Math.round(p.progress * 1000), total: 1000, text: p.text, ...(p.progress >= 1 ? { done: true } : {}) })
     });
     gen = true;
@@ -30,7 +37,8 @@ async function load({ base, model, prefer, dtype: forced }) {
 
 async function chat(messages, max_new_tokens) {
   if (mlc) {
-    const r = await mlc.chat.completions.create({ messages, temperature: 0, max_tokens: max_new_tokens });
+    const msgs = /Qwen3-(?!4B-Instruct)/.test(currentModel) ? messages.map((m, i) => (i === messages.length - 1 ? { ...m, content: `${m.content} /no_think` } : m)) : messages;
+    const r = await mlc.chat.completions.create({ messages: msgs, temperature: 0, max_tokens: max_new_tokens + 64 });
     return String(r.choices[0].message.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
   }
   const out = await gen(messages, { max_new_tokens, do_sample: false, repetition_penalty: 1.05 });

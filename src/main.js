@@ -107,7 +107,7 @@ async function transcribe(audio, source) {
 
 // ---------- samples ----------
 fetch(`${BASE}samples/manifest.json`).then((r) => r.json()).then((list) => {
-  $("#samples").innerHTML = list.map((s, i) => `<button class="sample" data-i="${i}"><b>${esc(s.title)}</b><small>${esc(s.file)}</small></button>`).join("");
+  $("#samples").innerHTML = list.map((s, i) => `<button class="sample" data-i="${i}" title="${esc(s.file)}"><span class="n">${String(i + 1).padStart(2, "0")}</span><b>${esc(s.title)}</b></button>`).join("");
   $("#samples").addEventListener("click", async (e) => {
     const b = e.target.closest(".sample"); if (!b) return;
     const s = list[b.dataset.i];
@@ -163,10 +163,11 @@ function renderReport() {
   const { r, meta } = S.pending;
   const rows = formatKoreanReport(r);
   const srcOf = { "S 규모": "count", "A 활동": "activity", "L 위치": "distance_m", "U 식별": "type", "T 시각": "time", "E 고도": "altitude_m", "보고자": "reporter" };
-  $("#reportCard").innerHTML = `<table class="salute">${rows.map((row) => {
+  $("#reportCard").innerHTML = `<dl class="salute">${rows.map((row) => {
     const s = r.src?.[srcOf[row.k]];
-    return `<tr><th>${esc(row.k)}</th><td class="${row.v === "미확인" ? "miss" : ""}">${esc(row.v)}${s === "ai" ? ' <span class="src ai">AI 보완</span>' : ""}</td></tr>`;
-  }).join("")}</table>${r.corrected ? '<p class="note">정정 반영됨: 정정 이후 값을 사용</p>' : ""}${r.llmMs ? `<p class="stat">LLM 보완 ${(r.llmMs / 1000).toFixed(1)}초</p>` : ""}`;
+    const m = /^([A-Z]) (.+)$/.exec(row.k);
+    return `<div class="f"><dt><span class="code">${esc(m ? m[1] : "")}</span>${esc(m ? m[2] : row.k)}</dt><dd class="${row.v === "미확인" || row.v === "미상" ? "miss" : ""}">${esc(row.v)}${s === "ai" ? ' <span class="src ai">AI 보완</span>' : ""}</dd></div>`;
+  }).join("")}</dl>${r.corrected ? '<p class="note">정정 반영됨 · 정정 이후 값을 사용</p>' : ""}${r.llmMs ? `<p class="stat">LLM 보완 ${(r.llmMs / 1000).toFixed(1)}초</p>` : ""}`;
   $("#confBadge").textContent = { high: "신뢰 높음", medium: "신뢰 보통", low: "정보 부족" }[r.confidence];
   $("#confBadge").className = `badge ${r.confidence}`;
   $("#readback").hidden = false;
@@ -206,7 +207,7 @@ async function answerSop(question) {
   for (const id of ["#readback", "#enCard", "#burstCard"]) $(id).hidden = true;
   $("#confBadge").textContent = "교범 질의";
   $("#confBadge").className = "badge";
-  $("#reportCard").innerHTML = `<p class="empty">질문으로 인식: "${esc(question)}"</p>`;
+  $("#reportCard").innerHTML = `<p class="sh">질문으로 인식</p><p class="q">"${esc(question)}"</p>`;
   $("#sopCard").hidden = false;
   $("#sopCites").innerHTML = hits.map((h) => `<details><summary>[${esc(h.id)}] ${esc(h.title)}</summary><p>${esc(h.body)}</p></details>`).join("");
   if (!hits.length) { $("#sopAns").textContent = "관련 교범 항목을 찾지 못했습니다."; return; }
@@ -237,7 +238,7 @@ function showSummary() {
   S.pending = null;
   for (const id of ["#readback", "#enCard", "#burstCard", "#sopCard"]) $(id).hidden = true;
   $("#confBadge").textContent = "상황 요약"; $("#confBadge").className = "badge";
-  $("#reportCard").innerHTML = `<p class="brief">${esc(text).replace(/\n/g, "<br>")}</p><p class="stat">확정 보고에서 계산 · 기기 내</p>`;
+  $("#reportCard").innerHTML = `<p class="sh">최근 30분 상황</p><p class="brief">${esc(text).replace(/\n/g, "<br>")}</p><p class="stat">확정 보고에서 계산 · 기기 내</p>`;
   speak(text.split("\n").slice(0, 2).join(" "));
 }
 $("#summaryBtn")?.addEventListener("click", showSummary);
@@ -246,11 +247,12 @@ $("#summaryBtn")?.addEventListener("click", showSummary);
 function paintMap() {
   const maxKm = Math.max(3, ...S.reports.filter((r) => r.distance_m).map((r) => Math.ceil(r.distance_m / 1000)));
   const scale = 100 / maxKm;
-  let svg = "";
-  for (let k = 1; k <= maxKm; k++) svg += `<circle r="${k * scale}" class="ring"/><text x="2" y="${-k * scale + 7}" class="rl">${k}km</text>`;
+  let svg = `<defs><marker id="hdArrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L6 3L0 6z" class="hd-tip"/></marker></defs>`;
   svg += `<line x1="0" y1="-100" x2="0" y2="100" class="ax"/><line x1="-100" y1="0" x2="100" y2="0" class="ax"/>`;
-  for (const [t, x, y] of [["N", 0, -103], ["E", 105, 3], ["S", 0, 109], ["W", -107, 3]]) svg += `<text x="${x}" y="${y}" class="cd">${t}</text>`;
-  svg += `<circle r="3.5" class="me"/>`;
+  for (let k = 1; k <= maxKm; k++) svg += `<circle r="${k * scale}" class="ring ${k === maxKm ? "outer" : ""}"/><text x="1.8" y="${k * scale - 1.8}" class="rl">${k}km</text>`;
+  for (let d = 0; d < 360; d += 10) { const a = (d - 90) * Math.PI / 180, r0 = d % 30 ? 97 : 94; svg += `<line x1="${Math.cos(a) * r0}" y1="${Math.sin(a) * r0}" x2="${Math.cos(a) * 100}" y2="${Math.sin(a) * 100}" class="tk"/>`; }
+  for (const [t, x, y] of [["N", 0, -103.5], ["E", 106, 2], ["S", 0, 108.5], ["W", -106, 2]]) svg += `<text x="${x}" y="${y}" class="cd">${t}</text>`;
+  svg += `<path d="M-4 0H4M0 -4V4" class="me-x"/><circle r="1.6" class="me"/>`;
   S.reports.slice(0, 20).forEach((r, i) => {
     if (r.bearing_deg == null) return;
     const d = (r.distance_m ?? maxKm * 500) / 1000 * scale;
@@ -259,13 +261,14 @@ function paintMap() {
     const cls = r.type === "풍선" ? "bln" : "uav";
     let arrow = "";
     const H = { 북: 0, 북동: 45, 동: 90, 남동: 135, 남: 180, 남서: 225, 서: 270, 북서: 315 }[r.heading_word];
-    if (H != null) { const b = (H - 90) * Math.PI / 180; arrow = `<line x1="${x}" y1="${y}" x2="${x + Math.cos(b) * 14}" y2="${y + Math.sin(b) * 14}" class="hd"/>`; }
-    svg += `${arrow}<g class="pt ${cls} ${i === 0 ? "new" : ""}"><circle cx="${x}" cy="${y}" r="${4 + Math.min(4, r.count ?? 1)}"/><text x="${x + 7}" y="${y - 6}">${r.type === "풍선" ? "풍선" : r.type === "드론" ? "UAV" : "?"}×${esc(r.count ?? "?")} ${esc(r.time ?? "")}</text></g>`;
+    if (H != null) { const b = (H - 90) * Math.PI / 180; arrow = `<line x1="${x + Math.cos(b) * 4}" y1="${y + Math.sin(b) * 4}" x2="${x + Math.cos(b) * 16}" y2="${y + Math.sin(b) * 16}" class="hd" marker-end="url(#hdArrow)"/>`; }
+    const lx = x > 55 ? x - 6 : x + 6, anchor = x > 55 ? "end" : "start";
+    svg += `${arrow}<g class="pt ${cls} ${i === 0 ? "new" : ""}">${i === 0 ? `<circle cx="${x}" cy="${y}" r="7" class="halo"/>` : ""}<circle cx="${x}" cy="${y}" r="${2.6 + Math.min(3, r.count ?? 1) * 0.5}" class="dot"/><text x="${lx}" y="${y - 5}" text-anchor="${anchor}">${r.type === "풍선" ? "풍선" : r.type === "드론" ? "UAV" : "?"}×${esc(r.count ?? "?")} <tspan class="tm">${esc(r.time ?? "")}</tspan></text></g>`;
   });
   $("#radar").innerHTML = svg;
 }
 function paintLog() {
-  $("#log").innerHTML = S.reports.map((r) => `<li><b>${esc(r.time ?? new Date(r.at).toTimeString().slice(0, 5))}</b> ${esc(r.type ?? "미상")} ${esc(r.count ?? "?")} · 방위 ${r.bearing_deg != null ? String(r.bearing_deg).padStart(3, "0") : "-"} · ${r.distance_m ? esc((r.distance_m / 1000).toFixed(1)) + "km" : "-"}<code>${esc(r.burst)}</code></li>`).join("") || '<li class="empty">아직 확정된 보고가 없습니다.</li>';
+  $("#log").innerHTML = S.reports.map((r) => `<li><span class="t">${esc(r.time ?? new Date(r.at).toTimeString().slice(0, 5))}</span><span class="w">${esc(r.type ?? "미상")} ${esc(r.count ?? "?")}${r.type === "풍선" ? "개" : r.type === "드론" ? "대" : ""}</span><span class="v"><small>방위</small> ${r.bearing_deg != null ? String(r.bearing_deg).padStart(3, "0") : "-"}</span><span class="v">${r.distance_m ? esc((r.distance_m / 1000).toFixed(1)) + "km" : "-"}</span><code>${esc(r.burst)}</code></li>`).join("") || '<li class="empty">아직 확정된 보고가 없습니다.</li>';
 }
 $("#export").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(S.reports, null, 2)], { type: "application/json" });
