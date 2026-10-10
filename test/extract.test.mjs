@@ -71,10 +71,26 @@ test("whisper mishearings of bearing and callsign", () => {
   assert.equal(extractReport("북쪽방이 350, 3km, 대형풍선 1개").bearing_deg, 350);
   assert.equal(extractReport("드론 세대 방위 1위공, 600m").bearing_deg, 120);
   assert.equal(extractReport("동초방이 090 드론 1대 200미터").bearing_deg, 90);
-  assert.equal(extractReport("알파둘 여기는 매하나 14시 반 남동쪽 약 800미터 드론 한대").reporter, "매하나");
-  assert.equal(extractReport("독수리 3, 매 하나 동쪽 드론 1대").reporter, "독수리 3");
+  assert.equal(extractReport("알파둘 여기는 매하나 14시 반 남동쪽 약 800미터 드론 한대").reporter, "매 하나");
+  assert.equal(extractReport("독수리 3, 매 하나 동쪽 드론 1대").reporter, "독수리 셋");
 });
 
 test("방위각 heard as 방위가", () => {
   assert.equal(extractReport("북동쪽 방위가 공사어 1.5km. 드론 2대").bearing_deg, 45);
+});
+
+test("real STT output forms (benchmark 2026-10-11)", () => {
+  const a = extractReport("여기는 독수리 3, 동남쪽 2,000m 지점 드론 2대, 고도 300, 북쪽으로 이동");
+  assert.equal(a.reporter, "독수리 셋");
+  assert.equal(a.direction_word, "남동");
+  assert.equal(a.distance_m, 2000);
+  assert.equal(a.altitude_m, 300);
+  assert.equal(a.heading_word, "북");
+  assert.equal(extractReport("매1, 방위 1위 공, 2.4kg, 드론 한 대").bearing_deg, 120);
+  assert.equal(extractReport("매1, 방위 1위 공, 2.4kg, 드론 한 대").distance_m, 2400);
+  assert.equal(extractReport("매1, 방위 1위 공, 2.4kg, 드론 한 대").reporter, "매 하나");
+  assert.equal(extractReport("풍선 한 개 2천 미터, 고도 삼백").distance_m, 2000);
+  assert.equal(extractReport("풍선 한 개 2천 미터, 고도 삼백").altitude_m, 300);
+  // existing form still wins
+  assert.equal(extractReport("알파 둘, 방위 공사오 1.5킬로 풍선 한 개").bearing_deg, 45);
 });

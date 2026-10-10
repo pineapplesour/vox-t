@@ -49,6 +49,11 @@ function fixReadout(tok) {
   return mixed;
 }
 function bearing(text) {
+  const spaced = last(/(?:방위각|방위가|방위|방이|방의|바위)\s*([0-9영공일이삼사오육륙칠팔구위어요])\s?([0-9영공일이삼사오육륙칠팔구위어요])\s?([0-9영공일이삼사오육륙칠팔구위어요])(?![0-9가-힣])/, text);
+  if (spaced && /\s/.test(spaced[0].replace(/^\S+\s*/, ""))) {
+    const readout = parseDigitReadout(fixReadout(spaced.slice(1).join("")));
+    if (readout != null && Number(readout) < 360) return Number(readout);
+  }
   const m = last(new RegExp(`(?:방위각|방위가|방위|방이|방의|바위)\\s*([0-9영공일이삼사오육륙칠팔구십백위어요]{2,4}|\\d{1,3})(?![0-9.]*\\s*(?:킬로|km|미터|m)(?![a-z]))\\s*(?:도)?`), text);
   if (m) {
     m[1] = fixReadout(m[1]);
@@ -99,11 +104,11 @@ function distance(text) {
 }
 
 function altitude(text) {
-  const m = last(new RegExp(`(?:고도|높이)\\s*(?:약|대략)?\\s*${NUM}\\s*(미터|m|피트|ft)`, "i"), text);
+  const m = last(new RegExp(`(?:고도|높이)\\s*(?:약|대략)?\\s*${NUM}\\s*(미터|m|피트|ft)?(?![0-9]|\\s*(?:킬로|km))`, "i"), text);
   if (!m) return null;
   const n = toNumber(m[1]);
   if (n == null) return null;
-  return /피트|ft/i.test(m[2]) ? Math.round(n * 0.3048) : Math.round(n);
+  return /피트|ft/i.test(m[2] ?? "") ? Math.round(n * 0.3048) : Math.round(n);
 }
 
 function time(text) {
@@ -137,11 +142,23 @@ function activity(text) {
 function reporter(text) {
   const CS = "(?:하나|둘|셋|넷|다섯|여섯|일곱|여덟|아홉|[0-9]{1,2})";
   const m = text.match(new RegExp(`여기는\\s*([가-힣A-Za-z]{1,6}\\s?${CS})(?![가-힣0-9])`)) ?? text.match(new RegExp(`^\\s*(?:긴급[,\\s]*)?([가-힣A-Za-z]{1,6}\\s?${CS})(?![가-힣0-9])`));
-  return m ? m[1].trim() : null;
+  if (!m) return null;
+  const NATIVE_CS = ["", "하나", "둘", "셋", "넷", "다섯", "여섯", "일곱", "여덟", "아홉"];
+  return m[1].trim().replace(/\s?([1-9])$/, (_, d) => ` ${NATIVE_CS[d]}`).replace(/([가-힣A-Za-z])(하나|둘|셋|넷|다섯|여섯|일곱|여덟|아홉)$/, "$1 $2");
+}
+
+// Rewrites common STT output forms into what the parser expects (seen on real Whisper output).
+export function normalizeStt(raw) {
+  return String(raw ?? "").replace(/\s+/g, " ").trim()
+    .replace(/(\d),(\d{3})(?!\d)/g, "$1$2")                                   // 2,000m
+    .replace(/(\d+(?:\.\d+)?)\s*천(?=\s*(?:미터|m|피트|ft|킬로|km))/gi, (_, n) => String(Number(n) * 1000))   // 2천 미터
+    .replace(/(\d+(?:\.\d+)?)\s*백(?=\s*(?:미터|m|피트|ft))/gi, (_, n) => String(Number(n) * 100))
+    .replace(/(\d(?:\.\d+)?)\s*(?:킬로그램|kg)(?![a-z])/gi, "$1킬로")                 // "2.4kg" is a misheard 2.4킬로
+    .replace(/(동남|동북|서남|서북)(?=\s*(?:쪽|방향|방면))/g, (d) => ({ 동남: "남동", 동북: "북동", 서남: "남서", 서북: "북서" })[d]);
 }
 
 export function extractReport(rawText) {
-  const text = String(rawText ?? "").replace(/\s+/g, " ").trim();
+  const text = normalizeStt(rawText);
   const c = pick(count, text);
   const dirWord = pick(directionWord, text);
   const bear = pick(bearing, text);
