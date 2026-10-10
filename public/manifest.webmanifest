@@ -1,0 +1,1 @@
+{ "name": "VOX-T 음성 온디바이스 전술 AI", "short_name": "VOX-T", "start_url": "./", "display": "standalone", "background_color": "#121417", "theme_color": "#121417", "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }] }

@@ -1,0 +1,19 @@
+{
+  "name": "d4d-voice-tactical-ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5190",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 5191",
+    "test": "node --test test/*.test.mjs",
+    "postinstall": "node -e \"const fs=require('fs');fs.mkdirSync('public/ort',{recursive:true});for(const f of fs.readdirSync('node_modules/onnxruntime-web/dist'))if(/^ort-wasm-simd-threaded(\\\\.(asyncify|jsep))?\\\\.(mjs|wasm)$/.test(f))fs.copyFileSync('node_modules/onnxruntime-web/dist/'+f,'public/ort/'+f)\""
+  },
+  "dependencies": {
+    "@huggingface/transformers": "4.3.1",
+    "@mlc-ai/web-llm": "^0.2.85"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0"
+  }
+}

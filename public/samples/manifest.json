@@ -1,0 +1,146 @@
+[
+  {
+    "file": "01_drone_sighting_a.wav",
+    "clean_file": "01_drone_sighting_a_clean.wav",
+    "title": "드론 2대 목격 보고",
+    "text": "독수리 셋, 알파 둘. 14시 32분, 북동쪽 방위각 공사오, 1.5킬로미터, 드론 두 대. 고도 약 백 미터, 남서 방향으로 이동. 이상.",
+    "expected": {
+      "type": "드론",
+      "count": 2,
+      "bearing_deg": 45,
+      "direction_word": "북동",
+      "distance_m": 1500,
+      "altitude_m": 100,
+      "heading_word": "남서",
+      "time": "14:32",
+      "activity": "이동",
+      "reporter": "알파 둘"
+    }
+  },
+  {
+    "file": "02_drone_sighting_b.wav",
+    "clean_file": "02_drone_sighting_b_clean.wav",
+    "title": "드론 1대 정지 비행",
+    "text": "알파 둘, 여기는 매 하나. 열네시 반, 남동쪽 약 팔백 미터 지점, 소형 드론 한 대 정지 비행 중. 고도 오십 미터. 이상.",
+    "expected": {
+      "type": "드론",
+      "count": 1,
+      "bearing_deg": null,
+      "direction_word": "남동",
+      "distance_m": 800,
+      "altitude_m": 50,
+      "heading_word": null,
+      "time": "14:30",
+      "activity": "정지 비행",
+      "reporter": "매 하나"
+    }
+  },
+  {
+    "file": "03_balloon_sighting.wav",
+    "clean_file": "03_balloon_sighting_clean.wav",
+    "title": "풍선 관측 보고",
+    "text": "독수리 셋, 송골매 넷. 15시 5분, 북쪽 방위 삼오공, 3킬로미터, 대형 풍선 한 개. 고도 약 이천 미터, 남쪽으로 표류 중.",
+    "expected": {
+      "type": "풍선",
+      "count": 1,
+      "bearing_deg": 350,
+      "direction_word": "북",
+      "distance_m": 3000,
+      "altitude_m": 2000,
+      "heading_word": "남쪽",
+      "time": "15:05",
+      "activity": "표류",
+      "reporter": "송골매 넷"
+    }
+  },
+  {
+    "file": "04_drone_swarm.wav",
+    "clean_file": "04_drone_swarm_clean.wav",
+    "title": "드론 군집 접근 긴급",
+    "text": "긴급, 독수리 셋. 16시 10분, 서쪽 방위각 이칠공, 2킬로미터, 드론 약 열두 대 편대 비행. 고도 삼백 미터, 동쪽으로 접근 중.",
+    "expected": {
+      "type": "드론",
+      "count": 12,
+      "bearing_deg": 270,
+      "direction_word": "서",
+      "distance_m": 2000,
+      "altitude_m": 300,
+      "heading_word": "동쪽",
+      "time": "16:10",
+      "activity": "편대 비행 접근",
+      "reporter": "독수리 셋"
+    }
+  },
+  {
+    "file": "05_self_correction.wav",
+    "clean_file": "05_self_correction_clean.wav",
+    "title": "수량 정정 보고",
+    "text": "알파 둘, 늑대 하나. 드론 두 대, 아니 정정, 세 대. 방위 일이공, 육백 미터, 고도 팔십 미터, 북쪽으로 이동.",
+    "expected": {
+      "type": "드론",
+      "count": 3,
+      "bearing_deg": 120,
+      "direction_word": null,
+      "distance_m": 600,
+      "altitude_m": 80,
+      "heading_word": "북쪽",
+      "time": null,
+      "activity": "이동",
+      "reporter": "늑대 하나"
+    }
+  },
+  {
+    "file": "06_sop_question.wav",
+    "clean_file": "06_sop_question_clean.wav",
+    "title": "보고 절차 질문",
+    "text": "여기는 알파 둘. 드론 목격 시 보고 절차 알려줘. 무엇부터 보고해야 하는지 순서대로. 이상.",
+    "expected": {
+      "type": "미상",
+      "count": 0,
+      "bearing_deg": null,
+      "direction_word": null,
+      "distance_m": null,
+      "altitude_m": null,
+      "heading_word": null,
+      "time": null,
+      "activity": "보고 절차 문의",
+      "reporter": "알파 둘"
+    }
+  },
+  {
+    "file": "07_noisy_partial.wav",
+    "clean_file": "07_noisy_partial_clean.wav",
+    "title": "잡음 섞인 끊긴 교신",
+    "text": "독수리 셋, 매 하나. 동쪽 방위 공구공, 드론 한 대, 고도 약 이백 미터, 서쪽으로 이동. 반복, 서쪽으로 이동.",
+    "expected": {
+      "type": "드론",
+      "count": 1,
+      "bearing_deg": 90,
+      "direction_word": "동",
+      "distance_m": null,
+      "altitude_m": 200,
+      "heading_word": "서쪽",
+      "time": null,
+      "activity": "이동",
+      "reporter": "매 하나"
+    }
+  },
+  {
+    "file": "08_coalition_relay.wav",
+    "clean_file": "08_coalition_relay_clean.wav",
+    "title": "연합군 전달용 보고",
+    "text": "독수리 셋. 연합군 파트너에게 전달 바람. 13시 45분, 북서쪽 2킬로미터, 드론 한 대, 고도 백오십 미터, 남쪽으로 이동.",
+    "expected": {
+      "type": "드론",
+      "count": 1,
+      "bearing_deg": null,
+      "direction_word": "북서",
+      "distance_m": 2000,
+      "altitude_m": 150,
+      "heading_word": "남쪽",
+      "time": "13:45",
+      "activity": "연합군 전달 요청",
+      "reporter": "독수리 셋"
+    }
+  }
+]
