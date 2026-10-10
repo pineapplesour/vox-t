@@ -1,3 +1,4 @@
+import "@seed-design/css/base.min.css";
 import "./style.css";
 import { extractReport, isQuestion } from "./lib/extract.js";
 import { formatKoreanReport, readBack, englishLine, burstMessage } from "./lib/report.js";

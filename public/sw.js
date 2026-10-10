@@ -1,7 +1,7 @@
 // Offline app shell. On install, store every built file listed in precache.json (HTML, JS, worker
 // chunks, ONNX Runtime WASM, samples). Model weights are cached separately by transformers.js / WebLLM.
 // Network-first while online so a redeploy shows up; cache when offline.
-const CACHE = "voxt-shell-v3";
+const CACHE = "voxt-shell-v4";
 self.addEventListener("install", (e) => e.waitUntil((async () => {
   const cache = await caches.open(CACHE);
   const { files } = await (await fetch("./precache.json", { cache: "no-store" })).json();

@@ -1,13 +1,12 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-seed-color-mode="light-only">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>VOX-T · 음성 온디바이스 전술 AI</title>
-<meta name="theme-color" content="#111214">
+<meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg">
-<script>try{var t=localStorage.getItem("voxt.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
 <header class="top">
@@ -23,9 +22,6 @@
       <span class="chip" id="sttChip">음성 인식 대기</span>
       <span class="chip" id="llmChip">LLM 대기</span>
     </div>
-    <button class="theme" id="themeBtn" type="button" aria-label="화면 밝기 전환" title="밝은 화면 / 어두운 화면">
-      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z"/></svg>
-    </button>
   </div>
 </header>
 
@@ -109,9 +105,6 @@
   </section>
 </main>
 <footer class="foot">모든 처리는 이 기기 안에서 수행됩니다 · 공개/합성 데이터만 사용 · 해커톤 시연용</footer>
-<script>
-document.getElementById("themeBtn").addEventListener("click",function(){var r=document.documentElement,n=r.dataset.theme==="light"?"dark":"light";r.dataset.theme=n;try{localStorage.setItem("voxt.theme",n)}catch(e){}});
-</script>
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>
