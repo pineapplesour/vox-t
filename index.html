@@ -11,39 +11,31 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand">
-    <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5v6M6.5 3v10M10 6v4M13.5 4.5v7"/></svg>
-    <span class="logo">VOX-T</span>
-    <span class="sub">음성 온디바이스 전술 AI</span>
-    <span class="track">T4-2</span>
-  </div>
-  <div class="status">
-    <div class="chips" aria-live="polite">
-      <span class="chip" id="netChip">네트워크 확인 중</span>
-      <span class="chip" id="sttChip">음성 인식 대기</span>
-      <span class="chip" id="llmChip">LLM 대기</span>
-    </div>
+  <div class="brand"><span class="logo">VOX-T</span><span class="track">T4-2</span></div>
+  <div class="chips" aria-live="polite">
+    <span class="chip" id="netChip">네트워크 확인 중</span>
+    <span class="chip" id="sttChip">음성 인식 대기</span>
+    <span class="chip" id="llmChip">LLM 대기</span>
   </div>
 </header>
 
 <section class="setup" id="setup">
   <div class="setup-in" role="dialog" aria-labelledby="setupTitle">
-    <p class="eyebrow">최초 1회 설정</p>
     <h1 id="setupTitle">모델 준비</h1>
-    <p class="lead">처음 한 번만 모델을 내려받아 이 기기에 저장합니다. 그 다음부터는 <b>인터넷 없이</b> 동작합니다.</p>
+    <p class="lead">처음 한 번만 이 기기에 저장합니다. 이후 <b>인터넷 없이</b> 동작합니다.</p>
     <div class="opts">
       <label><span>음성 인식</span><select id="sttModel">
-        <option value="onnx-community/whisper-small">Whisper small (정확, 약 400MB)</option>
-        <option value="onnx-community/whisper-base">Whisper base (빠름, 약 200MB)</option>
+        <option value="onnx-community/whisper-small">Whisper small · 약 400MB</option>
+        <option value="onnx-community/whisper-base">Whisper base · 약 200MB</option>
       </select></label>
       <label><span>LLM</span><select id="llmModel">
-        <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B · WebLLM (약 2.3GB, GPU 필요) · 교범 답변 권장</option>
-        <option value="Qwen2.5-1.5B-Instruct-q4f16_1-MLC">Qwen2.5 1.5B · WebLLM (약 1GB, 저사양 기기용)</option>
-        <option value="">사용 안 함 (규칙 추출만)</option>
+        <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B · 약 2.3GB · GPU</option>
+        <option value="Qwen2.5-1.5B-Instruct-q4f16_1-MLC">Qwen2.5 1.5B · 약 1GB · 저사양</option>
+        <option value="">사용 안 함</option>
       </select></label>
       <label><span>연산 장치</span><select id="devicePref">
         <option value="auto">자동 (GPU 우선)</option>
-        <option value="wasm">CPU 강제</option>
+        <option value="wasm">CPU</option>
       </select></label>
     </div>
     <div class="bars">
@@ -55,57 +47,45 @@
   </div>
 </section>
 
-<main class="grid">
-  <section class="col tx" aria-labelledby="h-tx">
-    <header class="ph"><h2 id="h-tx">송신</h2><span class="ph-meta">음성 입력</span></header>
-    <div class="ptt-wrap">
-      <button class="ptt" id="ptt" aria-label="누르고 말하기">
-        <span class="ring"></span>
-        <span class="mic" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5"/></svg></span>
-        <span class="ptt-text">
-          <span class="lbl">누르고 말하기</span>
-          <span class="lbl-on">송신 중 · 놓으면 전송</span>
-          <span class="lbl-busy">인식 중</span>
-          <span class="ptt-sub">누르는 동안 녹음</span>
-        </span>
-        <span class="kbd">Space</span>
-      </button>
-      <div class="meter" aria-hidden="true"><i id="level"></i></div>
-    </div>
-    <label class="tgl"><input type="checkbox" id="radioFx"><span class="sw" aria-hidden="true"></span><span>무전 음질 효과 <small>300-3400Hz · 잡음</small></span></label>
-    <label class="field"><span class="field-l">인식 결과 <small>고쳐서 다시 분석 가능</small></span>
-      <textarea id="transcript" rows="4" placeholder="무전 내용이 여기에 표시됩니다"></textarea>
-    </label>
-    <div class="row"><button class="btn" id="reparse">다시 분석</button><span class="stat" id="sttStat"></span></div>
-    <h3 class="sh">시연용 무전 샘플 <small>합성 음성</small></h3>
-    <div class="samples" id="samples"></div>
-  </section>
+<main class="stage">
+  <figure class="radar-box">
+    <svg id="radar" viewBox="-112 -112 224 224" role="img" aria-label="방위·거리 상황도"></svg>
+  </figure>
 
-  <section class="col rp" aria-labelledby="h-rp">
-    <header class="ph"><h2 id="h-rp">보고</h2><span class="badge" id="confBadge"></span><span class="ph-meta">SALUTE</span></header>
-    <div class="card" id="reportCard"><p class="empty">무전을 보내면 표준 보고(SALUTE)로 정리됩니다.</p></div>
+  <section class="now" aria-live="polite">
+    <span class="badge" id="confBadge"></span>
+    <div id="reportCard"><p class="empty">버튼을 누르고 무전하세요</p></div>
     <div class="readback" id="readback" hidden>
-      <p class="sh">복창</p>
-      <div class="rb-text" id="rbText"></div>
-      <div class="row actions"><button class="btn ok" id="rbOk">맞음 · 확정</button><button class="btn" id="rbSpeak">복창 듣기</button><button class="btn" id="rbFix">정정</button></div>
-      <p class="hint">음성으로 "맞음" 또는 "정정, ○○"이라고 말해도 됩니다.</p>
+      <p class="rb-text" id="rbText"></p>
+      <div class="actions"><button class="btn pri" id="rbOk">맞음 · 확정</button><button class="btn" id="rbFix">정정</button><button class="btn ghost" id="rbSpeak">복창 듣기</button></div>
     </div>
-    <div class="card small" id="enCard" hidden><b>연합군 전달 <small>EN</small></b><p id="enRule"></p><p class="ai" id="enAi"></p></div>
-    <div class="card small" id="burstCard" hidden><b>저대역 전송 메시지</b><code id="burst"></code><p class="stat" id="bw"></p></div>
-    <div class="card small" id="sopCard" hidden><b>교범 질의 <small>가상 SOP</small></b><div id="sopAns"></div><div class="cites" id="sopCites"></div></div>
+    <div id="sopCard" hidden><div id="sopAns"></div><div class="cites" id="sopCites"></div></div>
   </section>
 
-  <section class="col map" aria-labelledby="h-map">
-    <header class="ph"><h2 id="h-map">상황도</h2><span class="ph-meta">보고자 기준 · 방위/거리</span></header>
-    <div class="radar-box">
-      <svg id="radar" viewBox="-110 -110 220 220" role="img" aria-label="방위·거리 상황도"></svg>
-      <ul class="legend" aria-hidden="true"><li><i class="lg-me"></i>보고자</li><li><i class="lg-uav"></i>UAV</li><li><i class="lg-bln"></i>풍선</li><li><i class="lg-hd"></i>이동 방향</li></ul>
+  <details class="more">
+    <summary>상세</summary>
+    <div class="more-in">
+      <label class="field"><span class="sh">인식 결과</span><textarea id="transcript" rows="3" placeholder="무전 내용"></textarea></label>
+      <div class="row"><button class="btn sm" id="reparse">다시 분석</button><span class="stat" id="sttStat"></span></div>
+      <label class="tgl"><input type="checkbox" id="radioFx"><span class="sw" aria-hidden="true"></span><span>무전 음질 효과</span></label>
+      <p class="sh">시연 샘플</p>
+      <div class="samples" id="samples"></div>
+      <div id="enCard" hidden><p class="sh">연합군 전달</p><p id="enRule"></p><p class="stat" id="enAi"></p></div>
+      <div id="burstCard" hidden><p class="sh">저대역 전송</p><code id="burst"></code><p class="stat" id="bw"></p></div>
+      <div class="row log-head"><p class="sh">확정 보고</p><button class="btn sm" id="summaryBtn">상황 요약</button><button class="btn sm" id="export">JSON</button></div>
+      <ol class="log" id="log"></ol>
     </div>
-    <div class="row log-head"><h3>확정 보고</h3><button class="btn sm" id="summaryBtn">상황 요약</button><button class="btn sm" id="export">JSON 내보내기</button></div>
-    <ol class="log" id="log"></ol>
-  </section>
+  </details>
 </main>
-<footer class="foot">모든 처리는 이 기기 안에서 수행됩니다 · 공개/합성 데이터만 사용 · 해커톤 시연용</footer>
+
+<div class="dock">
+  <div class="meter" aria-hidden="true"><i id="level"></i></div>
+  <button class="ptt" id="ptt" aria-label="누르고 말하기">
+    <span class="ring"></span>
+    <svg class="mic" viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5"/></svg>
+  </button>
+  <p class="ptt-cap"><span class="lbl">누르고 말하기</span><span class="lbl-on">송신 중 · 놓으면 전송</span><span class="lbl-busy">인식 중</span></p>
+</div>
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>

@@ -16,7 +16,7 @@ const S = { stt: null, llm: null, sttReady: false, llmReady: false, pending: nul
 // ---------- network / status chips ----------
 function paintNet() {
   const on = navigator.onLine;
-  $("#netChip").textContent = on ? "온라인 (오프라인 동작 가능)" : "오프라인 · 기기 내 처리";
+  $("#netChip").textContent = on ? "오프라인 준비" : "오프라인 · 기기 내";
   $("#netChip").className = `chip ${on ? "" : "good"}`;
 }
 addEventListener("online", paintNet); addEventListener("offline", paintNet); paintNet();
@@ -164,11 +164,14 @@ function renderReport() {
   const { r, meta } = S.pending;
   const rows = formatKoreanReport(r);
   const srcOf = { "S 규모": "count", "A 활동": "activity", "L 위치": "distance_m", "U 식별": "type", "T 시각": "time", "E 고도": "altitude_m", "보고자": "reporter" };
-  $("#reportCard").innerHTML = `<dl class="salute">${rows.map((row) => {
+  $("#reportCard").innerHTML = `<div class="tiles">${rows.filter((row) => /^[A-Z] /.test(row.k)).map((row) => {
     const s = r.src?.[srcOf[row.k]];
-    const m = /^([A-Z]) (.+)$/.exec(row.k);
-    return `<div class="f"><dt><span class="code">${esc(m ? m[1] : "")}</span>${esc(m ? m[2] : row.k)}</dt><dd class="${row.v === "미확인" || row.v === "미상" ? "miss" : ""}">${esc(row.v)}${s === "ai" ? ' <span class="src ai">AI 보완</span>' : ""}</dd></div>`;
-  }).join("")}</dl>${r.corrected ? '<p class="note">정정 반영됨 · 정정 이후 값을 사용</p>' : ""}${r.llmMs ? `<p class="stat">LLM 보완 ${(r.llmMs / 1000).toFixed(1)}초</p>` : ""}`;
+    const [code, label] = [row.k[0], row.k.slice(2)];
+    const miss = row.v === "미확인" || row.v === "미상";
+    if (code === "L" && r.bearing_deg != null) row.v = [`${String(r.bearing_deg).padStart(3, "0")}°`, r.distance_m != null ? `${(r.distance_m / 1000).toFixed(1)}km` : null].filter(Boolean).join(" · ");
+    if (code === "A" && r.heading_word) row.v = `${r.heading_word}쪽 이동`;
+    return `<div class="tile ${miss ? "miss" : ""}"><span class="k"><b>${esc(code)}</b>${esc(label)}${s === "ai" ? ' <span class="ai">AI</span>' : ""}</span><span class="v" title="${esc(row.v)}">${esc(row.v)}</span></div>`;
+  }).join("")}</div>${r.corrected ? '<p class="note">정정 반영됨</p>' : ""}${r.llmMs ? `<p class="stat">LLM 보완 ${(r.llmMs / 1000).toFixed(1)}초</p>` : ""}`;
   $("#confBadge").textContent = { high: "신뢰 높음", medium: "신뢰 보통", low: "정보 부족" }[r.confidence];
   $("#confBadge").className = `badge ${r.confidence}`;
   $("#readback").hidden = false;
@@ -187,7 +190,7 @@ function renderReport() {
 function speakReadback() { if (S.pending && !speak(readBack(S.pending.r))) $("#rbSpeak").title = "이 기기에 오프라인 한국어 음성이 없어 화면 복창만 표시합니다"; }
 $("#rbSpeak").addEventListener("click", speakReadback);
 $("#rbOk").addEventListener("click", confirmPending);
-$("#rbFix").addEventListener("click", () => { $("#transcript").focus(); flash("정정할 내용을 말하거나 인식 결과를 고친 뒤 '다시 분석'을 누르세요"); });
+$("#rbFix").addEventListener("click", () => { $(".more").open = true; $("#transcript").focus(); flash("정정할 내용을 말하거나 인식 결과를 고친 뒤 '다시 분석'을 누르세요"); });
 
 function confirmPending() {
   if (!S.pending) return;
